@@ -10,3 +10,8 @@ broad network access." Access to resources in the cloud is available over multip
 RESOURCE POOLING
 "Resource pooling" is a fundamental premise of scalability in the cloud. Without pooled computing, networks, and storage a service provider must provision across multiple "silos" or discrete, independent resources with few or no interconnections. Multi-tenant environments, where multiple customers share adjacent resources in the cloud with their peers, are the basis of public cloud infrastructures. With multi-tenancy, there is an inherent increase in operational expenditures, which can be mitigated by certain hardware configurations and software solutions, such as application and server profiles.
 
+MEASURED SERVICE
+"Measured service" indicates that usage of these "pooled resources" is monitored and reported to the consumer, providing visibility and transparency to consumption rates and costs. Usage monitoring, for the purposes of chargeback (or merely for cross-departmental reporting and budgeting) has been a long-time requirement of IT stakeholders -- another holy grail it seems -- but building such a system is usually not a core competency of most IT departments.
+
+RAPID ELASTICITY
+The final trait highlighted in the NIST definition of cloud computing is "rapid elasticity." Elastic computing is critical to cost reductions and time to market (TTM). Indeed the notion of elastic resources in the IT supply chain is so desirable that Amazon named their cloud platform "Elastic Compute Cloud" ("EC2"). In terms of FTE costs, as I will demonstrate in later chapters, the OPEX associated with provisioning (moves, adds, and changes or MAC) in the IT supply chain are typically the most significant portion of the charges related to application deployment.
