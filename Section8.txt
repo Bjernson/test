@@ -1,0 +1,212 @@
+VPCs
+	Virtual Data Center in the cloud
+	Every region has a default VPC
+	Customer has complete control over the VPC setup
+		IP address range
+		ACLs
+		Sec Groups
+		Internet Gateways
+		Route tables
+		VPN Creation
+		
+	Internet Gateway
+		Device that connects to the internet
+	
+	Virtual Private Gateway
+		VPC VPN endpoint
+		
+	Traffic Flow
+	
+	IG/VPG --> Router --> Route Table (1 per subnet) --> Network ACL (1 per subnet) --> Security Group (can span subnets) --> Instance
+	One subnet == 1 AZ
+	cidr.xyz
+	
+	Default vs Custom VPC
+		Default
+			User Friendly
+			All AZs have a route to the internet
+			Each instance has a public/private IP address
+		Custom
+	
+	VPC Peering
+		Allows Connection of 2 VPCs
+		Instanced behave as if they are in the same private network
+		can peer between accounts
+		always hub and spoke no transitive peering
+
+LAB Notes
+	By Default you have subnets, route tables and internet gateways for default vpc
+	Creating VPC
+		Name
+		CIDR Block
+		Enable IPv6 or Not
+		Tenancy - Default or dedicated
+		
+		This creates
+			Default route table
+			Default Network ACL
+			Default Security Group
+		
+	Creating Subnets
+		Name
+		VPC
+		AZ
+		ipv4 cidr
+		ipv6 cidr
+		
+		Available IP is max - 5 i.e. 256 - 5 = 251
+			Network address 0
+			Router address 1
+			DNS server 2
+			future user 3
+			broadcast address 255
+		
+	Creating Internet Gateway
+		Name
+		Attach to a VPC - default is detached
+			Only 1 per VPC
+		
+	Route Tables
+		all new subnets are assigned to the default route table for the VPC
+		best practice is to create a different route table which has internet access and is NOT the default route table
+		
+		Creating Route table
+			Name
+			VPC
+			
+			Configure Route table
+				add ipv4 and ipv6 default routes, target is the igw
+	
+		Assign one of your subnets to the route table that has internet access
+		Modify subnet to enable auto assign public IPv4 addresses for your public subnet
+		
+	Security Groups
+		Don't span VPCs
+		
+	Connecting Instances between 2 different subnets 
+		Create Security Group in private subnet allowing traffic ingress from public subnet CIDR
+		Attach security group to instance
+		
+	Providing Internet access to vm in a private subnet - NAT Instances/NAT Gateways
+		Nat Instance
+			Launch using a community AMI amazon nat instance
+			Launch into public subnet
+			Change instance settings of the NAT Instance -- Disable source/destination check
+			Add a default route in the default route table target is the NAT instance
+			
+			Very Bad because
+				Single Point of Failure
+				Bottleneck (Instance type dictates throughput)
+				Complicated to do HA
+		
+		Nat Gateways
+			Allocate to Public subnet
+			Create new EIP
+			add default route in private subnet route table target is nat gateway
+			
+			Automatically HA
+			AWS Managed OS
+			Automatically scaled up to 10Gbps
+			not associated with sec groups 
+			automatically assigned public IP
+			More secure than nat instances
+			
+				
+			Traffic Flow
+			IGW --> Router --> Route Table --> NACL --> NAT GATEWAY --> Sec group --> Instance
+		
+	Network ACLs
+		Allows all traffic by default
+		one subnet can only be assigned to one NACL
+		all unassigned subnets to custom NACLs are automatically assigned to the DEFAULT NACL
+		cannot span multiple VPCs
+		add rule numbers in increments of 100
+		rules are evaluated in order, FIRST match takes effect
+		Assessed BEFORE security group
+		Block IP address using NACLs not security groups
+		
+		Creating
+			Name
+			VPC 
+			
+			Default on new NACLs all DENY
+			Add rules for outbound allowing all ephemeral ports 1024 - 65535
+			Associate with a subnet
+			
+
+VPC Endpoints
+	
+	Internal Gateways for AWS Services within custom VPCs
+	Creating
+		Types
+			Elastic Network Interface - attached to EC2 instance
+			Gateway - attached to the whole VPC
+		VPC
+		Route Table
+		Allow Full Access
+		
+Custom VPCs and ELB
+	
+	ELB needs to be attached to 2 subnets (different AZs) that have internet gateways attached
+		
+VPC Flow Logs
+	
+	Created and retrieved in Amazon Cloudwatch Logs
+	
+	Can be created at 3 levels
+		VPC
+		Subnets
+		Network Interface Level
+	
+	Creating
+		Filter - Rejected or accepted traffic?
+		permissions to log to cloudwatch
+		Cloudwatch log group name (need to be created)
+	
+	Can be streamed to LAmbda, Elasticsearch
+	Export data to S3
+	Cannot enable flow logs for peered VPCs not belonging to your account
+	You cannot tag a flow
+	You cannot change the configuration once it is created
+	Not all IP traffic is monitored
+		EC2 to amazon DNS servers
+		Windows Instance going to Amazon for windows license activation
+		Traffic to and from 169.254.169.254 for instance metadata
+		DHCP Traffic
+		Traffic going to the default VPC Router
+
+VPC Cleanup
+		
+	Steps
+		Delete EC2 instances first
+		Delete NAT Gateways
+		Delete Endpoints
+		Detach IGWs then delete
+		Delete VPC
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+		
+		
+	

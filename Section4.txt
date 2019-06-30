@@ -1,0 +1,191 @@
+Elasticity vs Scalability
+	Elasticity
+		pay for what you need
+		build infra based on your needs at the moment
+	
+	Scalability
+		Build your infra to meet long term demands
+	
+	Examples
+		EC2
+			S - Increase instance size, using reserved instances
+			E - Autoscaling groups
+			
+		DynamoDB
+			S - Unlimited amount of storage
+			E - Increase additional IOPS for spikes in traffic, decrease after
+			
+		RDS
+			S - Increase instance size
+			E - can't scale RDS based on demand
+			
+		Aurora
+			S - Increase instance size
+			E - Aurora Serverless
+			Notes
+				Within RDS
+				Elastic
+				Mysql/Postgresql compatible
+				
+RDS Multi AZ Failover
+	Keeps copy of prod DB on a different AZ
+	AWS handles replication/failover
+	not used for performance improvement
+	Failover happens without admin intervention
+		planned DB maintenance
+		DB Instance Failure
+		AZ failure
+	
+	Replication
+		MySQL, Oracle, PostGreSQL - synchronous physical replication
+		SQL Server engine - synchronous logical replication built-in
+		
+	Backup and Restore
+		Backups and Restores are taken from secondary thereby preventing IO suspension in primary
+		This is only when Multi AZ RDS is enabled
+		
+	You can force failover by rebooting your instance through console or rebootdbinstance API call
+	
+Read replicas
+	Elastic scale out of RDS via read only copies of your DB
+	Can be made through CreateDBInstanceReadReplicaAPI call or through AWS console
+	
+	Once created, database updates on the source DB instance will be replicated using the DB engine's built in async replication
+	
+	When to Use:
+		Scaling of Capacity to accomodate read heavy workloads
+		Serving read traffic while the source DB instance is available
+		Business reporting or data warehousing scenarios, read replica for report generation instead of production DB
+		
+	Supported Versions
+		MySQL
+		PostGreSQL
+		Mariadb
+		Aurora
+			SSD backed storage layer for DB workloads
+			Replicas share the same underlying storage
+			
+	When creating:
+		AWS takes snapshot of your DB
+			When multi AZ not enabled, I/O suspension 1 minute
+			when multi AZ enabled, snapshot will be on the secondary
+	
+	Connecting - New DNS endpoint per read replica
+	Promotion - Read replicas can be made to be it's own standalone DB, this breaks replication link from original source DB
+	
+	Up to 5 for Mysql, PostGreSQL, Mariadb
+	multiregional
+	asynchronous replication
+	multi-AZ
+	can have read replicas of read replicas, beware of replication latency
+	Snapshots and automated backups cannot be taken out of read replicas
+	Key metric is replica lag
+	
+		
+RDS Notes - Lab
+	Cloudwatch agents automatically installed on DB instance
+	Can be made public accessible upon creation - Bad idea
+	Multi AZ can be enabled post creation of DB
+	Create read replicas disabled by default, need to enable backups
+	When you apply changes immediately, RDS instance will reboot
+	DB encryption of data at rest
+	In creation screen, cannot create backups of read replicas. Backup can be made after creation of read replica
+	Reboot with failover, will report changed AZ after 10 minutes of the operation.
+	
+What version of RDS
+	Check engine version
+	AWS cli aws rds describe-db-instances --region <region> 
+	
+Elasticache
+	deploy, operate and scale in-memory cache in cloud
+	can be used to improve latency and throughput on read-heavy workloads
+	can store most commonly used DB queries/complex computational results
+	
+	Types
+		Memcached
+			protocol compliant with elasticache
+			existing tools which use memcached envs should work seamlessly
+			No MultiAZ
+			
+		Redis
+			Supports Master/slave replication
+			Multi AZ to enable cross AZ redundancy
+	
+	Things to look at:
+		CPU Util
+		SWAP usage
+		Evictions
+		Concurrent Connections
+		
+Aurora
+	Amazon's HA RDS Tech
+	Mysql PostGreSQL compatible
+	5x better performance MySQL 3x better performance PostGreSQL
+	10% cost of enterprise DB 
+	
+	Start with 10 GB scales in 10 GB increments up to 64TB
+	Compute resource can scale up to 64 vcpus and 488GiB memory
+	
+	stores 6 copies of data across 3 AZ, 2 copies per AZ
+	Designed to transparently handle loss:
+		2 copies can still maintain write availability
+		3 copies can still maintain read availability
+	
+	Aurora storage is self healing
+	
+	Aurora Replicas
+		up to 15 Read replicas
+		writes on primary instance is replicated on all AZs data copies
+	
+	Aurora at 100% CPU?
+		If write cause, scale up the instance
+		If Read cause, scale out
+		
+	Aurora Serverless
+		on-demand autoscaling config for aurora based on application needs
+		pay on per second basis based on DB capacity when DB is active
+		Can migrate between standard and serverless in RDS Management Console
+		
+
+Aurora Lab - Notes
+	
+	Provisioned or serverless
+	Can create Mysql or postgresql compatible DB
+	enabling encryption encrypts all replicas - turned on by default
+	Backtrack allows rollback of DB without restoring snapshot
+	2 instances, 1 read node, 1 write node
+	replication roles writer and reader
+		different endpoints per instance
+	Failover priority determines next master, lower is higher prio, lowest is 0 highest is 15
+	Cross region read replicas create new aurora cluster in selected region
+		If replication is disrupted, you have to manually set it up again
+	
+Troubleshooting Autoscaling Groups
+	Instances not launching in an autoscaling group
+		Does not exist anymore
+			Keypair
+			Sec Groups
+			Auto scaling group
+			
+		ASG config not working correctly
+		Instance Type not supported in AZ
+		AZ no longer supported
+		Invalid EBS Device Mapping
+		ASG service not enabled on your account
+		Attempting to attach EBS block device to an instance-store AMI
+	
+	REVIEW ASGS
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		

@@ -1,0 +1,397 @@
+S3
+	Simple Storage Service
+	Data spread across multiple devices and facilities
+	Obect-based storage
+	
+	Files can be 0 to 5TB
+	Unlimited storage
+	Files are stored in buckets (folders)
+	
+	Universal namespace (bucket names have to be unique globally)
+	
+	Data Consistency Models
+		Read after write consistence of PUT new Objects, as soon as you upload, file is available to read
+		Eventual Consistency for overwrite PUTS and DELETS, if you modify or delete, needs time to propagate
+		
+	Object Based
+		Objects Made up of:
+			Key - filename
+			Value - bytestream (file content)
+			Version ID
+			Metadata
+			Subresources - policies and ACLs, CORS (Cross Origin Resource Sharing), Transfer Acceleration
+			
+	99.99% Available
+	99.9% Guarantee by AWS
+	11 9s durability for data i.e 1 out of 10 million files for 10,000 years or 1 out of 10 billion files in a year
+	
+	Tiered Storage Available
+	Lifecycle management
+	Versioning
+	Encryption
+	ACLS and Bucket policies
+	
+	Tiers
+		S3
+			99.99% avail, 11 9s durability
+			designed to sustain loss of up to 2 facilities concurrently
+			
+		S3 - Inf Accessed
+			Lower fee
+			but charged retrieval fee
+			11 9s durability 99.9 Available
+			
+		S3  - One Zone IA
+			20% less cost
+			11 9s durable, 99.5% avail
+			cannot withstand facility loss
+			
+		RRS - Reduced Redundancy Storage
+			4 9s durability
+			99.99 availability
+			
+		Glacier
+			Very cheap
+			Archival only 3 to 5 hours restore
+			11 9s durability
+			99.9 avail upon restoration
+			
+		S3 - Intelligent Tiering
+			2 tiers, frequent and infrequent access
+			automatically moves your data to most cost-effective tier
+			30 days not accessed moves to infrequent accessed
+			Upon access will move to frequent accessed
+			11 9s durable 99.9 avail
+			No fee for accessing data but will charge $0.0025 monthly per 1000 obects
+			
+	Charges
+		Amount of storage in GBs
+		Requests (Get, Put, Copy)
+		Storage Management Pricing
+			Inventory
+			Analytics
+			Object Tagging
+		Data transferred out of S3
+		Transfer Acceleration - Uses Cloudfront
+
+S3 Lab Notes
+	Upon creating bucket
+		OPTIONS:
+		Can enable versioning
+		Enable bucket access logging
+			Request name
+			Request time
+			Response Code
+			Stored in a bucket in the same region
+		Assign tags for cost tracking etc.
+		Object-level API logging via cloudtrail 
+		Encryption
+			use AWS KMS 
+			use AWS S3 Managed Keys
+			All Server side and at rest
+		Enable Cloudwatch Metrics
+		
+		PERMISSIONS
+		By default public access is blocked
+		
+	Per Object:
+		Has its own link
+		has its own Permission options
+		has own encryption options
+		
+S3 Lifecycle Policies
+	Manage objects using most cost effective option
+		Transitioning objects to different tiers
+		Archive through glacier
+		Delete
+		
+	Rules based on object object creation date i.e. 90 days after creation
+	
+MFA Delete and Versioning
+	Versioning
+		Enable revert to older version
+		deletes ONLY apply a delete marker
+		to permanently delete, delete version ID
+		
+	MFA Delete
+		additional layer of protection to S3 versioning
+		need MFA authentication to delete an object versioning
+		need MFA auth to suspend or reenable versioning
+		can use same MFA used in IAM for user auth
+
+S3 Encryption
+	Types
+		In Transit
+			SSL/TLS - Secure Sockets Layer/Transport Layer Security
+			TLS is updated version of SSL
+		At Rest
+			Server side 
+				SSE-S3 Server side encryption S3 Managed Keys
+					all AES 256 encryption
+					keys used per object
+					keys are reencrypted using master key which has key rotation
+				AWS KMS
+					Separate permission to create envelope key which reencrypts your keys
+					Audit trail when using your key
+				SSE-C Server side encryption with customer provided keys
+					AWS handles encryption/decryption
+					Client handles key management
+			
+		Client Side Encryption
+			Customer encrypt files before uploading
+			
+	
+	ENFORCING S3 ENCRYPTION
+		PUT REQUEST CONTENTS
+			DNS bucket name
+			Date
+			Auth string
+			Content Type
+			Content Length
+			MetaData
+			Expect 100 continue 
+			
+		If file in encrypted at upload time:
+			x-amz-server-side-encryption header should be included
+			the header value has 2 options:
+				AES256 - SSE-S3
+				ams:kms - SSE-KMS
+			Can add bucket policy to require uploads to have the header
+			
+	REVIEW: paano nalalaman via header kung anong key via KMS yung gagamitin???? Lol apparently via GUI padin pag nag upload ka
+	
+S3 Encryption Lab Notes
+	Can enable upon bucket creation - encrypts files upon upload to S3
+	Can create bucket policy to require encryption upon upload
+		Create s3 bucket policy
+		Deny
+		Principal is '*' for all requests
+		AWS service is amazon s3
+		action is Put Object
+		ARN is your bucket ARN
+		Add Condition
+			Condition String not equals
+			Key is x-amz-server-side-encryption
+			value is required encryption type i.e aws-kms
+			
+		WEIRD: Error may appear saying action does not apply to any resource/s in statement
+			existing naman yung ARN
+			need daw appendan ng /* yung ARN para tanggapin as valid policy
+	
+	Upon upload
+		You can choose encryption type for the file
+		Returns 403 when header is not present
+		
+EC2 Volume Types
+	Ephemeral (Instance-Store)
+		Data Gets Lost when:
+			Failure of an underlying drive
+			Stopping an EBS backed instance with Ephemeral additional volumes
+			Terminating an instance
+		Instance attributes are fixed for life
+		Do not rely for long term data
+		
+	EBS
+		Upgradeable instance while instance is stopped
+		
+	Root - OS Drive
+		can be EBS or Ephemeral
+		Ephemeral 
+			only up to 10GB
+			deleted upon instance termination
+			Cannot be stopped, can only be rebooted or deleted
+		EBS 
+			up to 2 TB
+			EBS backed will be deleted upon instance termination by DEFAULT but can be SET OTHERWISE
+			Can be stopped
+	 
+	Additional Volumes - D:/ /dev/sdb etc.
+		EBS
+			will NOT be deleted upon instance termination
+		ephemeral 
+			deleted upon instance termination
+
+EBS Volumes Lab Notes
+	EC2 and EBS need to be at same AZ
+	EBS Volumes can be modified on the fly
+		type and size w/o downtime (has performance impact during migration)
+		except standard(magnetic)
+	To migrate instance with EBS volumes to different AZ
+		snapshot the EBS volumes first
+		Create a new volume from snapshot with target AZ
+		Create an image from the EBS snapshot
+		Launch instance using the new image
+	Snapshots can be copied to different region (for transfer of instance to different region)
+	Or create the AMI from the snapshot then Copy the AMI across regions
+	Snapshots exist in S3 (no user visibility though)
+	Snapshots are incremental
+	To snapshot an EBS root device, best practice is to stop the instance first BUT you can do it on the fly
+	You can create AMI from both Image and Snapshots (Nasa slides pero parang redundant AMI from image????)
+	
+EBS Encryption and Downtime
+	For most AWS resources, encryption can only be enabled at creation
+	for EFS
+		If you want to encypt an already existing EFS
+		Create a new one and then migrate
+	for RDS
+		Same as EFS
+	for EBS
+		Same as EFS
+		Cannot disable encryption once encypted
+		You can migrate data between encrypted and decrypted volumes
+		If you want to encypt an existing volume
+			snapshot
+			copy snapshot with encryption enabled
+			restore encrypted snapshot
+			
+	For S3
+		Encryption anytime
+		
+KMS vs CloudHSM (Cloud Hardware Security Modules)
+	Both used for Key Management
+	Both offer high security levels
+	Both HA
+	
+	KMS
+		Shared hardware (multi-tenant)
+		Multi tenancy should not be an issue
+		Free-tire eligible
+		Encrypt data in AWS S3,EBS,DynamoDB
+		Symmetric algorithm - same algrotihm and key for encrytion/decryption
+		
+	HSM
+		physical device
+		protects confidentiality of your keys
+		Dedicated Hardware
+		no free-tier
+		Within your own VPC
+		FIPS 140-2 level 3 compliance and EAL-4
+		For applications with strict regulatory requirements i.e financing 
+		Encrypt data in AWS , AA, Document Signing, Etc. 
+		Assymetric algorithm
+
+AMIs
+	
+	provides all info need to launch an EC2 instance
+		Template for the root volume
+		Launch permissions (who can use)
+		Block Device Mapping
+	
+	AWS provides a default selection of AMIs
+	User can create custom AMIs
+	AMI must be registered in order to be launched (Only used if the Image creation was done via CLI)
+	Registered per region-basis
+		
+		
+	Sharing
+		Private, shared or public or even sell via AWS Marketplace
+		By default is private
+		Origin account has full control
+		Origin account is charged for storage of AMI
+		Owner must provide read permissions for the storage that backs the AMI (EBS or S3)
+		If an AMI is copied, the copier will be charged for the AMI storage of that copy
+		
+	Copying
+		Cannot directly copy an encrypted AMI shared by another account
+			Need to copy the snapshot and reencrypt using own key
+			So you need the original shapshot from the sharing account as well as the original encryption key
+			Then copy from the original snapshot and reencrypt using your own key
+			Then register it as a new AMI with you as the owner
+		
+		Cannot directly AMI with an associated billingproducts code
+			Whether via subscription or via Licensing fee eg. Windows Redhat AMIs from AWS marketplace
+			Can do it indirectly via creating an image from launched paid AMI
+			
+SNOWBALL
+	
+	Physical Device Used for transporting terabytes/petabytes in and out of AWS
+	Tamper Resistant
+	256-bit encryption
+	Region specific, not for cross region transfer
+	
+	How to Use:
+		Connect to network
+		Install Snowball client
+		Execute transfer
+	
+	When to Use:
+		Lots of Data to upload
+		physically isolated
+		if it takes more than week to transfer
+		One time-ish transfer of large data
+	
+	EDGE version
+		100 TB Device
+		Some compute capability
+		can be clustered to act as a single pool of storage/compute resource
+		S3 compatible endpoint, supports NFS, can run lambda functions while copying data
+		S3 buckets and Lambda Functions are preconfigured on the device (You need to request/define)
+		
+		When to Use:
+			Local data processing first before upload to AWS i.e. business analytics before transfer
+			
+STORAGE GATEWAY
+	
+	Virtual appliance that interfaces between on-prem resources and AWS
+	Supports VMWare and Hyper-V
+	
+	Types
+		File Gateway
+			NFS/SMB
+			Stored in S3
+			Accessed using NFS/SMB mountpoint
+			NFS/SMB backed by S3
+			All the benefits of S3
+			
+		
+		Volume GATEWAY
+			Cloud backed storage via ISCSI
+			Stored
+				Store locally and backup to AWS
+				low latency for all data
+				need own storage infra
+				off site async backups (EBS snapshots to S3)
+			Cached
+				S3 as primary storage
+				cache frequently accessed data locally
+				Need capacity only for frequently accessed data
+				low latency for frequently accessed data
+				off site async backups (EBS snapshots to S3)
+		Tape Gateway (VTL)
+			Data archiving stored in glacier and accessed via VTL
+			Don't need to invesst on your own tape infra
+			integrates with existing tape infra i.e Netbackup Backupexec Veeam
+			Backup Apps connect via ISCSI to Tape Gateway
+			
+ATHENA
+
+	Interactive Query Service
+	Query data in S3 using SQL syntax
+	Use Cases:
+		query log files
+		Generate business reports
+		Analyze Usage/billing
+		
+ATHENA LAB Notes
+	Under Analytics
+	Change Region to Region of S3 bucket
+	
+	QUERIES:
+		CREATE DATABASE <NAME>; (then select database from left hand side)
+		CREATE TABLE (which contains the columns and column attributes for the table)
+		LOCATION <s3://bucket_name/account_ID>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		 

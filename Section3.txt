@@ -1,0 +1,199 @@
+Deploying EC2
+	Notes:
+	Placement Group - allows deployment to single AZ, increasing higher network throughput and lower latency
+	Requesting Spot Instances - can request more than 1 instance but will not launch if the requested number of instances is not available
+
+	Launch Issues
+	
+		InstanceLimitExceeded
+			Reached number of instances you can run per region by default 20
+			Can request increase per region
+		
+		InsufficientInstanceCapacity
+			AWS does not currently have enough on-demand capacity that you are requesting
+			To Resolve
+				Wait for a few minutes to try again
+				Request fewer instances
+				Select different instance type
+				Purchase RIs
+				Submit a request without specifying AZ
+				
+Deploying EBS
+
+	GP2 - General Purpose SSD
+		1GB up to 16TB
+		16000 IOPS Max
+		min 100IOPS
+		3 IOPS per GB of Disk Size
+		Can burst IOPS up to 3000 using I/O Credits
+			IOPS higher than 3000 can only be achieved by increasing disk size
+			Initial I/O Credits per volume can sustain burst of 3000 up to 30 minutes
+	
+	io1 - Provisioned IOPS SSD
+		4GB up to 16TB
+		50 IOPS/GB
+		64000 IOPS Max 
+		
+	st1 - Throughput Optimized HDD
+		500GB up to 16TB
+		500 IOPS Max
+		Lower Price
+		For Big Data and log processing
+		
+	sc1 - Cold HDD
+		500 GB up to 16TB
+		250 IOPS Max
+		Lowest Price
+		Infrequently acccessed data such as file server
+		
+	Hitting the IOPS Limit
+		IO queuing
+		To solve
+			Increase volume size but only until 5.2TB for gp2 vols
+			but if you need more than 16000 need IO1 type
+
+Bastion Hosts - remember hehe
+
+ELB
+	Application Load Balancer
+		Layer 7 LB
+		for http and https traffic
+		advanced request routing based on http/https headers
+		IP is changed when it scales
+	
+	Network Load Balancer
+		Layer 4
+		TCP load balancer
+		Faster performance millions RPS and lower latencies
+		Can map to a static IP per subnet 
+		Get both benefits by attaching an ALB behind an NLB
+		
+	Classic
+		Legacy
+		Not recommended
+		very basic access to layer 7 headers
+		can also do pure layer4 but slower than NLB
+	
+	Pre-Warming
+		Contact AWS to pre-warm ELB
+		give expected level of traffic
+			Start and end dates
+			Expected RPS
+			Total Size of a typical request
+		Normally ELB can adapt to gradually increasing traffic
+	
+	
+	Error Messages
+		4xx
+			Client Side Error
+			400 Malformed/Bad wrong format of request
+			401 Unauthorized - user access denied
+			403 Forbidden - Blocked via ACL
+			460 Client Closed connection before load balancer can respond, client timeout may be too short
+			463 Received X-Forwarded-For with more than 30 IP addresses
+			
+		5xx
+			Server Side Error
+			500 Internal Server error - error on loadbalancer
+			502 Bad Gateway - App Server error, sent back a malformed response to the ELB
+			503 Service Unavailable - no registered targets
+			504 Gateway Timeout - app is not responding, issue in app/db
+			561 Unauthorized - received an error code from the ID provider when trying to authenticate user
+			
+	CloudWatch Metrics
+		Upon creation of load balancer and assignment of target
+			default metrics will be populated in monitoring tab of the ELB
+			AWS will send ELB metrics to cloudwatch as well as metrics for backend instances
+		
+		Can create alarm to perform a specific action
+		Are gathered at 1 minute intervals
+		
+		Metrics
+			BackendConnectionErrors
+			HealthyHostCount
+			UnhealthyHostCount
+			HTTP_CODE_BACKEND_2xx,3xx,4xx,5xx
+			Latency
+			Request Count
+			SurgeQueueLength (Classic) number of pending requests max queue size is 1024
+			SpilloverCount (Classic) number of rejected requests due to maxed out queue
+	
+	Deploying ALB
+		Listeners
+			Port listener which should be the port that clients use to connect to the ALB
+		
+		AZs
+			Enables ELB on the AZ you specify
+			Increases Availability when choosing multiple AZ
+		
+		Security Groups
+			Make sure the SG is open to clients IP with port specified in your listener
+			Make sure SG can connect to backend server
+		
+		Target Group
+			allows you to select target port/protocol
+		
+		Target Type
+			Instance allows you to choose via Instance ID
+			IP allows you to specify the specific IP address
+			
+		Health Check
+			Specify the protocol the ALB uses to connect to the backend server
+			Specify the path being served by the backend server
+		
+		Post Check
+			State should be active
+			Backend service should be accessible via DNS A record of ALB
+
+AWS Systems Manager
+
+	Gives Visibility and control over the whole AWS Infra
+	Integrates with CloudWatch allowing visibility to operational data
+	Includes Run Command which automates operational tasks across resources
+		security patches
+		package updates
+	Organize inventory, and allows resource grouping and allow management of on premise systems
+	
+	Run Command
+		Allows you to run any of the ff:
+			Stop, Restart, terminate, resize instance
+			attach/detach EBS volumes
+			create snapshots/ backup dynamodb tables
+			apply patches and updates
+			Run an ansible playbook
+			Run a shell script
+	
+	Setup
+		Create IAM Role for EC2 and attach AMAZONEC2RoleforSSM Role
+		Add role when you launch the instance
+		Add tag to be able to group the resource in systems manager
+	
+	Built in insights
+		AWS Config
+		Cloud Trail
+		Personal Health Dashboard
+		Trusted Advisor
+		Dashboard by CloudWatch
+		Inventory Insights
+			OS Versions
+			Apps installed
+			
+	Actions
+		Automation- pre made documents, you can make your own
+	
+		Run Command - pre made commands run within the server
+			Can show output or save output on s3 bucket
+	
+	Patch Manager - set patch baselines
+	
+	Maintenance window - Allow scheduling of run command and automation
+	
+	State Manager - Config Management tool, forces consistency of configuration
+			
+	Managed Instances - show instanced managed by AWS SSM
+	
+	Activations - register on prem servers to AWS Systems Manager
+	
+	Documents - List of all documents in SSM
+	
+	Parameter Store - Centralized store for secrets, encrypted

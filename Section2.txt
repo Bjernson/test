@@ -1,0 +1,408 @@
+CLOUDWATCH
+
+Can Monitor:
+		Compute
+		EBS
+		Database and Analytics
+		Others (billing, Sns SQS)
+
+Host level metrics by default:
+	CPU
+	Network
+	Disk I/O only
+	Status Check
+	RAM (Custom)
+	VM Disk (Custom)
+
+Monitoring Interval:
+	5 minutes default
+	1 minute if you enable detailed monitoring
+
+Retention Rate:
+	Indefinite (Default)
+	Can set log rotation
+	Can retrieve metrics from terminated EC2 or ELB
+	
+Alarms:
+	Can be made per monitored metric
+	Can set threshold per alarm
+	Can set action per threshold breached
+
+Note:
+	Can be used on-premise install SSM and cloudwatch agent
+
+Monitoring EC2
+To enable custom metrics:
+	1. Create IAM Role allowing EC2 service to access cloudwatch
+	2. Add IAM role to launched instance
+	3. Run perl script for posting instance data to cloudwatch
+	4. Add the perl script to crontab to execute the script every minute
+
+	
+EBS
+	GP2 - General Purpose SSD
+		1GB up to 16TB
+		10000 IOPS Max
+		1 IOPS per GB of Disk Size
+		Can burst IOPS up to 3000 using I/O Credits
+			IOPS higher than 3000 can only be achieved by increasing disk size
+			Initial I/O Credits per volume can sustain burst of 3000 up to 30 minutes
+	
+	io1 - Provisioned IOPS SSD
+		4GB up to 16TB
+		64000 IOPS Max 
+		
+	st1 - Throughput Optimized HDD
+		500GB up to 16TB
+		500 IOPS Max
+		Lower Price
+		For Big Data and log processing
+		
+	sc1 - Cold HDD
+		500 GB up to 16TB
+		250 IOPS Max
+		Lowest Price
+		Infrequently acccessed data such as file server
+
+Prewarming EBS 
+	Or called initialization, accesses all storage blocks on the volume once
+	For newly created volumes, no longer necessary
+	For volumes restored from snapshots pulled from S3 this can still be done
+	
+	
+Monitoring EBS
+	Metrics
+		Volume Read/Write Ops
+			To get this, Get IOPS in graph divided by period i.e total / 300 seconds for 5 minute period
+		Volume Queue Length
+			Number of operations waiting to be completed
+			should be 0 most of the time
+	
+	Status Checks
+		Ok
+		warning - performance degradation
+		impaired - stalled
+		insufficient data
+		
+Modying EBS
+	For newer generation EC2 flavors, you can now modify attached volumes:
+		Type
+		Size
+		IOPS
+
+Monitoring ELB
+	Ways to Monitor
+		Cloudwatch metrics
+		access logs
+		request tracing
+		Cloudtrail Logs
+	
+	Cloudwatch metrics
+		Upon creation of load balancer and assignment of target
+			default metrics will be populated in monitoring tab of the ELB
+			AWS will send ELB metrics to cloudwatch
+			
+	Access Logs
+		When you enable access log monitoring
+			can select 1 minute or 60 minute interval 
+			need to set s3 bucket for storage must be located in same region (or have AWS create the s3 location automatically)
+			can still store data where an ec2 instance has been deleted behind an autoscaling group
+			
+	Request Tracing
+		For Application Load balancers only
+		AWS adds a header to the http request X-Amzn-Trace-ID
+	
+	Cloud Trail
+		Audit logs of API calls within AWS services  
+		
+Monitoring Elasticache
+
+	Things to look at:
+		CPU Util
+		SWAP usage
+		Evictions
+		Concurrent Connections
+
+	Memcached
+		CPU
+		Multithreaded
+		can handle CPU Util up to 90%
+		when reached, need to add nodes to cluster
+		
+		SWAP
+		Should be 0 most of the time and not exceed 50MB
+		If it exceeds, increase memcached_connections_overhead parameter
+		
+		EVICTIONS
+		No recommended setting
+		Scale up or Scale out
+		
+		Concurrent Connections
+		No recommended setting
+		large number means a huge traffic spike or application is not releasing connections
+		
+	Redis
+		CPU
+		Not Multithreaded
+		CPU Util threshold is 90 / # of cores
+		
+		SWAP
+		No SwapUsage metric, use reserved-memory instead
+		
+		EVICTIONS
+		No recommended setting
+		scale out
+		
+		Concurrent Connections
+		No recommended setting
+		large number means a huge traffic spike or application is not releasing connections
+
+Cloudwatch custom dashboards
+	
+	Dashboard has global visibility
+	BUT you need to change to specific region to add metrics from that region
+	
+Billing Alarms
+	Receive billing alerts
+	Receive billing reports and save to S3 bucket
+	Set total cost exceeds a set amount for the month
+	set email address to receive, and confirm email
+
+AWS Organizations
+	Used for management of multiple AWS accounts
+	
+	Allows
+		Central Management of policies across multiple AWS accounts
+			Create account groups and apply policies
+			
+		Control access to AWS services
+			Create Service Control Policies (SCP) and apply them to account groups
+			SCP overrides service control from IAM
+			
+		Automate AWS Account Creation and Management
+			inherits policies applied to groups for new accounts
+			
+		Consolidate Billing across accounts
+			Consolidate charging reports
+			get pricing benefits from aggregated usage
+			
+AWS Tagging and Resource Groups
+	
+	Tags
+		Case Sensitive
+		Key Value Pairs attached to AWS Resources
+		Metadata
+		Can sometimes be inherited i.e. Auto-Scaling, CloudFormation, Elastic Beanstalk
+	
+	Resource Groups
+		Group Resources based on Tags
+		contain info such as:
+			Region
+			Name
+			Healthcheck
+		
+		Specific Information:
+			for EC2 - priv/pub IP address
+			for ELB - port config
+			for RDS - DB Engine etc
+	
+	Types
+		Classic
+			Global
+			
+		AWS Systems Manager
+			Per Region
+			Can execute operations on the resources belonging to that group
+
+EC2 Pricing
+	
+	On Demand
+		Low Cost and flexibility
+		per second/hour payment
+		
+	Reserved
+		steady state and predictable usage
+		up front payments to reduce compute cost
+		Standard RIs up to 75% discount
+		Convertibe RI up to 54% allow change attribute of the instance to equal or larger
+		Scheduled RI
+		1 year to 3 year terms
+	
+	SPOT
+		flexible start and end times
+		very low compute price
+		for urgent computing needs that need large capacity
+		
+	Dedicated Hosts
+		Not Multi tenant
+		for regulatory requirements
+		licensing requirements
+		Can be purchased hourly
+		or Reserved up to 70%
+		
+	
+		
+AWS_Config
+	
+	Managed service that enables
+		AWS Resource inventory
+		AWS Config history
+		AWS Change Notifications
+	
+	Provides:
+		Config Snapshots, logs config changes
+		Automated compliance checking
+	
+	
+	Components:
+		Config Dashboard
+		Config Rules
+			Managed
+			Custom
+		Resources
+		Settings
+		
+	Terminology:
+		Configuration Item
+			Point in time attribute of a resource
+			
+		Configuration snapshots
+			Collection of config items
+			
+		Config Stream
+			Stream of changed config items
+			
+		Config History
+			Collection of config items for a resource over time
+			
+		Config Recorder
+			Configuration of the config that records and stores config items
+			Logs Config for account in each region
+			Stores in s3
+			notified via sns
+	
+	What can be seen:
+		Resource:
+			Type
+			ID
+		
+		Compliance
+		Timeline which contains:
+			Config Details
+			Relationships (which ec2 instance is the sec group attached)
+			Changes
+			CloudTrail event
+		
+	Compliance Checks:
+		Triggers:
+			Periodic
+			Config Snapshot delivery (filterable)
+		
+		Managed Rules
+			About 40
+			Basic but fundamental
+			
+	Permissions needed:
+		
+		IAM Role that allows:
+			Read permission to the recorded resources
+			Write Access to S3 logging bucket
+			Publish Access to Sns
+		
+		Console will optionally create this automatically
+	
+	Restrict Access:
+		
+		Only admins have full access
+		Operators need only read-only permissions
+		Enforce correct IAM policies for users
+		
+	Monitoring Config:
+		CloudTrail check actions done to config i.e. stopping config recorder
+
+Health Dashboards
+	
+	Service Health
+		Shows service health of AWS service per region
+		status.amazon.com
+		Can show continental information
+		
+	Personal Health
+		provides alerts and remediation guidance when AWS is experiencing events that may affect you
+		
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+	
+	
+	
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+	

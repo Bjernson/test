@@ -1,0 +1,406 @@
+COMPLIANCE
+
+	frameworks
+		PCI DSS
+		ISO
+		HIPAA - US
+	
+	ISO International Organization for Standardization 27001:2005/10/13
+		Documented ISMS
+		Establish, implement, operate, monitor, review, maintain, improve
+	
+	FEDRAMP	Federal RIsk and Management Program
+		US Govt Program
+		security for Cloud
+	
+	HIPAA	Health Inusrance Portability and Accountability act of 1996
+		protect confidentiality and security of healthcare information
+		US Law
+		Not all services are HIPAA compliant yet
+	
+	NIST National Institute for Standards and Technology
+		US Industry standards for managing cybersecurity risks
+	
+	PCI DSS	Payment Card Industry Data Security Standard
+		protect credit, debit and cash card transactions
+		also against misuse of personal information
+	
+		12 Requirements:
+			Install and Maintain a firewall configuration to protect cardholder data
+			Do not use vendor-supplied defaults for system passwords and other security parameters
+			Protect stored cardholder data
+			Encrypt Transmission of cardholder data across the internet
+			Protect all systems from Malware, and regularly update anti virus programs
+			Develop and maintain secure systems and apps
+			Restrict access to cardholder data by need to know
+			Identify and authenticate access to system components
+			Restrict physical access to cardholder data
+			Track and monitor to all network resources and cardholder data
+			Regularly test security systems and processes
+			Maintain a policy that addresses information security for all personnel
+		
+	SAS 70 Statement on auditing standards
+
+	SOC 1 Service Organization Controls - Accounting Standard
+
+	FISMA Federal Information Security Modernization Act
+
+	FIPS 140-2 US Govt computer security standard in rating cryptographic modules
+
+DDOS Mitigation
+	Good to read the whitepaper
+
+	Makes website or application unavailable to your end users
+	Can be made by multiple mechanisms
+		large packet floods
+			L7 Application Attacks - Flooding
+			Slowloris 
+				hold sessions open by sending partial requests
+				Maxing number of connections
+		reflection/amplification techniques
+			NTP - Spoofing Source IP address
+			SSDP
+			DNS
+		large botnets
+		
+	Mitigation:
+		Minimize attack surface area
+			Route53
+			ELB
+			Cloudfront
+		Use auto-scaling groups for both WAFs and Webservers
+		Safeguard Exposed Resources
+			WAFs
+		Learn Normal Behavior
+			CloudWatch
+		Create a Plan for Attacks
+		AWS Shield
+		
+	AWS Shield
+		Free service that protects ELB, AWS Cloudfront and Route53
+		SYN/UDP Floods, Reflection attacks, Layer3/4 attacks
+		Advanced is $3000 per month
+			dedicated 24x7 team DDR Team
+			against larger and more sophisticated attacks
+			near real time flow monitoring
+			Protects you bill due to the traffic spikes experienced during DDOS
+
+			
+AWS Marketplace security products
+	AMIs for security
+		WAFs
+		Antivirus
+		Firewalls
+		etc
+	Region Specific
+	Kali Linux for Penetration testing
+	Permission is Required for ALL PEN TESTS
+	Different Prices
+	CIS OS Hardening
+	
+IAM Custom Policies LAB NOTES
+	AWS MAnaged Policies - Premade by AWS
+	Can create by visual editor or by json
+	Steps to create custom policy
+		Choose Service
+		Choose Action
+			List
+			Read
+			Write
+			Permissions
+		Choose Resources
+		Condition
+	
+	Then create Role
+		For EC2
+		Attach the custom policy in permissions
+
+	Never use access key ID and Secret Access Keys for aws CLI auth within EC2. Use ROLES
+	YOU CAN NOW ATTACH A ROLE INTO A LIVE RUNNING INSTANCE
+	
+	you can edit a policy attached, will take effect almost immediately
+	
+MFA and Reporting with IAM - LAB
+	Can enable on root account
+	Can take a picture of the original QR code as backup for the MFA
+	Can enable per IAM user
+		via AWS Console as normal
+		via AWS CLI
+			STEPS
+				Instance needs to have full access to IAM
+				aws iam create-virtual-mfa-device --virtual-mfa-device-name EC2-User --outfile /home/ec2-user/QRCode.png --bootstrap-method QRCodePNG
+				aws iam enable-mfa-device --user-name EC2-User --serial-number arn:aws:iam::"USERNUMBERHERE":mfa/EC2-User --authentication-code-1 "CODE1HERE" --authentication-code-2 "CODE2HERE"
+	
+	You can use CLI wit MFA
+		aws sts get-session-token commands
+		
+	Credential Report
+		Shows all users
+		auth methods used (MFA or not?)
+		last auth timestamp
+		
+STS
+	Security Token Service
+	Grant Users temporary and limited access to AWS Resources
+	Users can come from 3 sources
+		Federation (typically AD)
+			Uses SAML
+			Gives rights based on AD no need for IAM account
+			SSO
+		Federate with Mobile Apps
+			FB
+			Amazon
+			Google
+			Open ID
+		AWS Cross Account Access
+		
+	Federation
+		Joining of users from different domains
+		
+	Identity Broker
+		Service that allows identity information to be joined to a different auth domain
+		
+	Identity Store
+		Services which store users such as AD and FB 
+		
+	Identities
+		User
+		
+	STEPS for authentication
+		User logs in application
+		Application calls in an Identity Broker (Developed)
+		Broker Auth first with 3rd party Identity Store to validate credentials
+		Broker secures an STS token using GetFederationToken function call
+			Broker must use IAM Credentials
+			Call must include IAM Policy
+			Call must include duration 1 to 36 hours
+		STS confirms IAM policy attached to the AWS user used by the broker
+		STS returns 4 values to the app
+			AWS access key
+			AWS secret access key
+			Token
+			Duration
+		Broker Returns the values to the app
+		Application uses the STS token to authenticate to AWS Service 
+		IAM allows the AWS service to perform the operation
+		
+	
+Logging - Security
+	Services
+		CloudTrail
+		AWS Config
+		AWS Cloudwatch logs
+		VPC Flow Logs
+	Recommend reading security at scale white paper
+	
+	Prevent Unauthorized access to log files
+		Using IAM Users, groups, Roles, policies
+		Using S3 bucket policies
+		Using MFA
+		
+	Set Alerts when logs are created or fail to create using:
+		CloudTrail Notifications
+		AWS Config Rules
+		
+	Alerts should be specific but not divulge detail (show only log file location)
+	
+	Log changes to system components
+		Using AWS Config Rules
+		CloudTrail
+	
+	Set control to prevent log modification
+		IAM and S3 policies
+		CloudTrail log file validation
+		CloudTrail log file encryption
+
+AWS Hypervisors
+	Run on Xen Hypervisors
+	VMs run as
+		PV Paravirtualization
+			used to be faster
+			guests don't have elevated access to CPU
+			uses rings for privilege modes
+				ring 0 hypervisor OS
+				ring 1 Guest OS
+				ring 3 applications
+
+		HVM Hardware Virtual Machine
+			full virtualization
+			windows VMs
+			HVM over PV when available
+		
+	Isolation
+		Done trhough the firewall in Xen's Hypervisor
+	
+	Access
+		Only Admins with business need to do so
+		they use MFA
+		logged and audited
+		revoked when no longer needed
+		
+	Guest Access
+		Customer Controlled
+		AWS does not have any access rights
+	
+	Memory Scrubbing (EBS)
+		When provisioned to a customer
+		When unallocated from a VM
+		Not returned to free memory until completely scrubbed
+		
+Dedicated Instances vs Dedicated Hosts
+	Dedicated Instances
+		Physically Isolated from hardware level from other guests which belong to other AWS accounts
+		May share hardware with other non dedicated instances from SAME account
+		On demand
+		RI save 70% off
+		spot save 90% off
+	
+	Dedicated Hosts
+		Physical server dedicated to you
+		Gives additional visibility/control on how VMs are placed
+		Allows server-bound software licenses to be used
+		Used for compliance and regulatory rules
+		billed per hosts
+		
+AWS Systems Manager - EC2 Run
+	Manage a large number of AWS VMs and On Prem
+	Automate common admin tasks and adhoc config changes
+	Without logging in to the instances
+	
+	Steps
+		Need to create IAM Role with policy EC2 Role for SSM
+		Launch EC2 with that role or attach role to existing ec2
+		Click Run command
+		Select command
+		Select instance manually or via tags
+		Type properties JSON - optional
+		enable SNS notification once it runs - optional
+		
+	SSM agent needs to be installed to the instance
+	Commands and parameters are defined in a Systems Manager Document
+	Commands can be issued via
+		AWS Console
+		AWS CLI
+		AWS Tools for Powershell
+		Systems Manager API
+		Amazon SDKs
+
+	Parameter Store
+		securely put confidential data on instances at boot time
+		Under EC2 Systems Manager Shared Resources
+		Steps
+			Create Parameter
+			Key Value Pair
+				String
+				String List - comma separated string
+				Secure String - encrypted using AWS KMS Default
+		
+		Parameter can be passed to different AWS services
+			Lambda
+			CloudFormation
+			EC2
+			EC2 Run
+
+AWS Config - S3 Lab Notes
+	s3 bucket public write prohibited
+	s3 bucket public read prohibited
+	
+Secure S3 using pre-signed URLs
+	Normally Using SDKs (Python, Java, Go)
+	Steps
+		Create EC2 with role s3adminaccess
+		aws s3 presign s3://BUCKET_NAME/OBJECT_NAME --expires-in TIME_IN_SECONDS (default is 3600)
+		will return an https link
+		The https link will allow the object to be accessible in public
+		
+AWS Inspector vs AWS Trusted Advisor
+	Inspector
+		Automated VA tool
+		
+		How it works
+			Create assessment target
+			Install agent on ec2 instance
+			Create assessment template
+			Perform assessment run
+			Review Findings against rules
+		
+		Steps:
+			Create Inspector Role - allows ec2 describe all
+			Tag your ec2 targets
+			Install AWS Agent
+				Shell command
+				AWS Systems Manager
+			Define the target tags
+			Define an assessment template
+				Name of the assessment
+				Premade Rule packages
+					CIS
+				Duration 1 hour recommended
+			Run the assessment template
+		
+		Can download the report via html or pdf
+		Can Create Master templates
+			Can add more than 1 rules package
+	
+	Trusted Advisor
+		Optimization of AWS environment
+			cost optimization - business/enterprise
+			performance
+			security
+			Fault Tolerance - business/enterprise
+		
+		2 versions - Dependent on support plan 
+			Core checks only and recommendations
+			Full trusted advisor for business/enterprise
+
+Shared Responsibility Model
+	AWS Responsibilities
+		global infra
+		hardware, software, networking, facilities
+		managed services
+		Systems that you do not have access to (RDS Instance)
+		Managed services that you do not have access to view the application (dynamodb lambda etc.)
+	Customer Security Responsibilities
+		IAAS
+		updates and security patches
+		configuration of AWS provided firewall
+		
+	The model changes for different service types:
+		Infrastructure
+			Compute Services
+			Build Cloud Infrastructure
+				
+		Container
+			RDS EMR and Elastic Beanstalk
+			Services run on a compute resource that customer does not have access to
+			Customer is responsible for
+				Platform level IAM
+				network controls
+				firewall rules
+		
+		Abstracted
+			AWS Manages the application and the Infrastructure
+			Customer manages application level IAM
+			
+	YOU ARE RESPONSIBLE FOR THE THINGS YOU CAN CONTROL
+
+Other Security Aspects
+	Security groups are stateful - keeps track of connection state inbound == outbound
+	You need to be able to read security group rules
+	When you want to find out who provisions stuff
+		Cloudtrail
+		Athena
+		
+	AWS Artifact
+		on demand download of AWS security and compliance documents AKA audit artifacts
+		used to be submitted to auditors and regulators to show AWS compliance
+		
+	CloudHSM vs KMS
+		Key Control is customer only for HSM, AWS and customer for KMS
+		You cannot create pub/priv keypair using KMS, only cloud HSM due to asymmetric nature
+		CloudHSM now has utility/metered billing no longer 5k usd per month
+		
+	Encryption
+		S3	- Instant just turn on encryption
+		
+		DynamoDB, RDS, EFS, EBS - Encryption with Migration

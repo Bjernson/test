@@ -1,0 +1,160 @@
+DNS101
+	VPCs are now ipv6 compatible
+	Top level domain name --- .com .gov
+	second level domains --- .co.uk --- the .co
+	
+	Domain registrar
+		such as godaddy 123-reg.co.uk
+		authority that can assign domain names under one or more top level domains
+		enforces domain name uniqueness
+		domain names are recorded in the WHOIS database
+		
+	SOA Records
+		Name of the server that supplied the zone
+		Administrator of the zone
+		current version of the data file
+		The duration in seconds where
+			a secondary name server should wait before checking for updates
+			a secondary name server should wait before retrying a failed zone transfer
+			max seconds that a name server can use data before it must be refreshed or expire
+			TTL on resource records
+		
+	NS Records
+		Name server records
+		used by top level domain servers to direct traffic to the content DNS servers which contain the authoritative DNS records
+		
+	A Records
+		Address records
+		translates human readable name to IP
+		
+	TTL record
+		Length of time that a DNS record is cached
+		Architectural notes:
+			Before major cloud migration companies drop their TTL records to 300 seconds
+			Wait for 2 days so that the new TTL setting of 300 seconds are reflected in the whole internet
+			Then perform the migration
+			
+	CNames
+		Canonical Name
+		Resolve one domain name to another
+		mobile.acloud.guru --> test.com 
+		
+	Alias Records (AWS ONLY)
+		Similar to a CNames
+		map one dns name to another
+		Key DIFFERENCE with CNAME
+			CNAME cannot be used for naked domain names (zone apex record) (review)
+		normally maps apex zone to an ELB (CNAME based)
+		
+		
+	Note: Always try to use an Alias record over CNAME because it is free
+	
+	LAB - NOTES
+	
+	Route 53 is global service
+	Since AWS is now a domain registrar, you can now register a domain name through AWS console
+		can take up to 3 days to complete
+	When registered, it becomes a hosted zone
+	By Default the hosted zone will have RRs
+		NS - 4 different name servers across different top level domains 
+		SOA 
+	Per RR has
+		DNS Record Type
+		set as alias record?
+		TTL
+		value/s (per line)
+		Routing Policy
+	
+	Routing Policies
+		Simple
+			One or multiple IP addresses per record
+			If multiple, IP address returned is random (however remember that DNS records are cached)
+			Cannot associate health checks
+				
+		Weighted
+			Specify percentage of requests to different addresses
+			Creating the record set
+				weight value is not in percent, you specify number of requests which becomes a fraction of the integer sum of all weights (hahahaha)
+					will only associate with other RRs with same name and type
+				weight value is in whole numbers
+				can be associated with healthchecks (review)
+				you create multiple record sets per weight
+			
+		Latency based
+			Routes based on lowest network latency for the client
+			Creating the record set
+				You need to create a resource record set on the regions which host your website
+				when creating the RRs with this policy, the region is automatically determined based on public IP
+				
+		
+		Failover
+			active/passive setup
+			setup a health check on the active
+				Set Name
+				Set what to monitor
+					Endpoint
+					Other healthcheck
+					Cloudwatch alarm
+				
+				Specify endpoint by
+					IP address or Domain Name
+					Set
+						Protocol
+						IP address
+						hostname
+						port
+						path
+						
+				Can create an alarm
+				Can change request intervals
+				Can change failure threshold
+				
+			Creating the record set
+				Create record set with failover routing policy
+				Associate health check with the record set
+				Specify the Failover record type primary or secondary
+				Normally only the primary has an associated health check
+			
+		Geolocation
+			Routes based on client geographical area
+			Creating the record set
+				Set default location (review what happens when you dont have a default location and you access from PH hahahaha) apparently AWS will return no answer 
+				Set location based on the IP address you put in the record set
+		
+		Multivalue answer
+			Allows multiple record sets for one name
+			up to 12 multivalue answer records per resource
+			can associate health check per records
+			Can respond with up to 8 healthy records per request
+			Creating the record set
+				Choose multivalue anwer policy
+				Associate health check (optional)
+			Used for mapping across multiple resources
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
