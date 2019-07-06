@@ -1,0 +1,102 @@
+CloudFormation
+	Manage configure and provision your AWS Infrastrcture as Code
+	Resources are defined as templates
+	YAML or JSON
+	
+	Benefits
+		Consistent provisioning (less mistakes)
+		Less time than configuring manually
+		Can be version controlled and peer reviewed
+		Free to Use
+		Can be used to manage updates and dependencies
+		Can be used to rollback and delete the whole stack
+		
+	Template
+		YAML or JSON
+		Gets uploaded to S3 via upload through the cloudformation console
+		Cloudformation reads the template
+		The resulting resources is called a stack
+		
+		Parts
+			AWSTemplateVersion: 2010-09-09
+			Description (optional)
+			Metadata (optional)
+			Parameters (input_values)
+			Conditions (Change outcomes based on a parameter)
+			Mappings (Set values based on region)
+			Transform (Include snippets of code (other templates or lambda code) outside the main template)
+			Resources (Define AWS resources to be created)
+			Outputs (Define Outputs of a cloudformation template)
+			
+		Only Resource Section is Mandatory
+		
+	LAB NOTES
+	
+		Creating
+			Create Stack
+				Create new
+				select from predefined templates
+					Choose a sample template in AWS
+					Upload file to S3
+					Specify an Amazon S3 Template URL
+				
+				Specify Details
+					Fill in the data defined in your parameters section
+				
+				Options
+					Metdata Tags for the Stack
+					Permissions (AWS console account being used will be the default)
+					Rollback Triggers (Roll back stack creation/update when a cloudwatch threshold is reached) max 5 triggers
+					Notifications - Via SNS
+					Termination Protection default disabled
+					Timeout
+					Rollback on Failure - if part of stack creation fails, delete whole stack (useful to set to no for debugging)
+					
+			Check Stack Details
+				Check parameters
+				CHeck Template
+				Check Outputs
+				Check Resources
+				Check Events
+				
+			When you upload a template, it automatically uploads it to a cloudformation bucket (cannot be deleted while the stack is active)
+
+ELastic Beanstalk
+	Deploying and Scaling Web Applications (Programming Languages and App server platforms)
+	Users Focus on writing Code, no need to manage infrastructure
+	Will Handle
+		Deployment
+		Capacity Provisioning
+		Load Balancing
+		AutoScaling
+		Application Health
+	
+	You can either retain full control of underlying AWS resources or have Elastic Beanstalk Manage it
+	You only pay for the resources used
+	You can select instance type based on application needs
+	Managed platform updates
+		OS
+		programming language
+	
+	Monitor and manage app health using dashboard
+		Integrated with cloudwatch and xray
+		
+	LAB NOTES
+		
+		Creating
+			Application Name
+			Platform
+				PHP APACHE etc.
+			Application Code
+				Sample
+				Zip or WAR
+				
+		Config Overview
+		Health Dashboard
+		Metrics
+
+OPsWorks
+	Automate server config using chef or puppet
+	AWS Manages your puppet/chef servers
+	Works with existing chef/puppet Code
+					
