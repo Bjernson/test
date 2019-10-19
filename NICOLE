@@ -1,1 +1,13 @@
 
+STEO FUNCTIONS
+  coordinate different workflows
+  sequence/coordinate batch processing jobs
+    cannot use lambda functions because you pay for waiting time
+    and 15 minutes limit
+  Send messages in automated workflows
+  can run for whole year
+  functions are names as state machines
+  can integrate to cloudwatch events
+    failure of step function notifies a slack channel
+    shcedule execution of state machine
+  
